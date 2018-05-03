@@ -104,6 +104,16 @@ ${function() {
 	app.listen(7777);
 }
 
+// Include `print` function in every isolate which goes to main nodejs output
+ivm.Isolate.prototype.createContext = function(createContext) {
+	return async function(...args) {
+		let context = await createContext.apply(this, args);
+		await context.global.set('print', new ivm.Reference((...args) => console.log(...args)));
+		await (await this.compileScript('print = (print => (...args) => print.applySync(null, args.map(str => "" + str)))(print)')).run(context);
+		return context;
+	};
+}(ivm.Isolate.prototype.createContext);
+
 // Screeps mod
 module.exports = function(config) {
 	if (!config.engine) {
