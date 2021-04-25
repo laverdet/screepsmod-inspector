@@ -6,11 +6,10 @@ const websockify = require('koa-websocket');
 const ivm = require('isolated-vm');
 
 // Check to see if this is `runner.js`
-let endpoint;
+let runnerEndpoint;
 for (let ii = 0; ii < process.argv.length; ++ii) {
-	let match = /\/([a-z]+\.js$)/.exec(process.argv[ii]);
-	if (match) {
-		endpoint = match[1];
+	if (process.argv[ii].includes('runner.js')) {
+		runnerEndpoint = true;
 		break;
 	}
 }
@@ -36,7 +35,7 @@ function listen() {
 ${function() {
 	let rows = [];
 	for (let pair of playerSandboxes) {
-		let uri = `chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:7777/inspect/${pair[0]}`;
+		let uri = `devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:7777/inspect/${pair[0]}`;
 		let cpuTime = pair[1].getIsolate().cpuTime;
 		rows.push(`<tr>
 			<td>${pair[0]}</td>
@@ -121,7 +120,7 @@ module.exports = function(config) {
 	}
 	config.engine.enableInspector = true;
 	config.engine.mainLoopResetInterval = 0x7fffffff;
-	if (endpoint === 'runner.js') {
+	if (runnerEndpoint) {
 		listen();
 		config.engine.on('playerSandbox', function(sandbox, userId) {
 			let current = playerSandboxes.get(userId);
